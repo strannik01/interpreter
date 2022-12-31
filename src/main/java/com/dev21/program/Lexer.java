@@ -27,7 +27,7 @@ public class Lexer {
         position++;
     }
 
-    public Token nextToken() {
+    public Token getToken() {
 
         if (position >= input.length())
             return new Token(SyntaxKind.END_OF_FILE_TOKEN, position, "\u0000", null);

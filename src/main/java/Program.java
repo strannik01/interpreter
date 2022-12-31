@@ -45,7 +45,7 @@ public class Program {
 
         System.out.print(indent);
         System.out.print(marker);
-        System.out.print(node.kind());
+        System.out.print(node.getKind());
 
         if (node instanceof Token && ((Token) node).getValue() != null) {
             Object val = ((Token) node).getValue();

@@ -14,10 +14,10 @@ public class Parser {
         var lexer = new Lexer(text);
         Token token;
         do {
-            token = lexer.nextToken();
-            if (token.kind() != SyntaxKind.BAD_TOKEN)
+            token = lexer.getToken();
+            if (token.getKind() != SyntaxKind.BAD_TOKEN)
                 tokens.add(token);
-        } while (token.kind() != SyntaxKind.END_OF_FILE_TOKEN);
+        } while (token.getKind() != SyntaxKind.END_OF_FILE_TOKEN);
 
         this.tokens = tokens.toArray(Token[]::new);
         diagnostics.addAll(lexer.getDiagnostics());
@@ -39,7 +39,7 @@ public class Parser {
         return peek(0);
     }
 
-    private Token nextToken() {
+    private Token advanceNextToken() {
         var currentToken = currentToken();
         position++;
         return currentToken;
@@ -52,36 +52,30 @@ public class Parser {
     }
 
     private ExpressionSyntax parseExpression(int parentPrecedence) {
-        var left = parsePrimaryExpression();
+        ExpressionSyntax left;
+        var unaryOperatorPrecedence = SyntaxFacts.getUnaryOperatorPrecedence(currentToken().getKind());
+        if (unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence) {
+            var operatorToken = advanceNextToken();
+            var operand = parseExpression(unaryOperatorPrecedence);
+            left = new UnaryExpressionSyntax(operatorToken, operand);
+        } else {
+            left = parsePrimaryExpression();
+        }
         while (true) {
-            var precedence = getBinaryOperatorPrecedence(currentToken().kind());
+            var precedence = SyntaxFacts.getBinaryOperatorPrecedence(currentToken().getKind());
             if (precedence == 0 || precedence <= parentPrecedence) {
                 break;
             }
-            var operatorToken = nextToken();
+            var operatorToken = advanceNextToken();
             var right = parseExpression(precedence);
             left = new BinaryExpressionSyntax(left, operatorToken, right);
         }
-
         return left;
     }
 
-    private static int getBinaryOperatorPrecedence(SyntaxKind kind) {
-        switch (kind) {
-            case MULTIPLICATION_TOKEN:
-            case DIVISION_TOKEN:
-                return 2;
-            case ADDITION_TOKEN:
-            case SUBTRACTION_TOKEN:
-                return 1;
-            default:
-                return 0;
-        }
-    }
-
     private ExpressionSyntax parsePrimaryExpression() {
-        if (currentToken().kind() == SyntaxKind.OPEN_PARENTHESIS_TOKEN) {
-            var left = nextToken();
+        if (currentToken().getKind() == SyntaxKind.OPEN_PARENTHESIS_TOKEN) {
+            var left = advanceNextToken();
             var expression = parseExpression(0);
             var right = matchToken(SyntaxKind.CLOSE_PARENTHESIS_TOKEN);
             return new ParenthesizedExpressionSyntax(left, expression, right);
@@ -92,10 +86,10 @@ public class Parser {
     }
 
     private Token matchToken(SyntaxKind kind) {
-        if (currentToken().kind() == kind) {
-            return nextToken();
+        if (currentToken().getKind() == kind) {
+            return advanceNextToken();
         }
-        diagnostics.add("ERROR: Unexpected token <" + currentToken().kind() + ">, expected <" + kind + ">");
+        diagnostics.add("ERROR: Unexpected token <" + currentToken().getKind() + ">, expected <" + kind + ">");
         return new Token(kind, currentToken().getPosition(), null, null);
     }
 }

@@ -14,15 +14,27 @@ public class Evaluator {
 
     private int evaluateExpression(ExpressionSyntax node) {
 
-        if (node instanceof LiteralExpressionSyntax) {
-            return (int) ((LiteralExpressionSyntax) node).getLiteralToken().getValue();
+        if (node instanceof LiteralExpressionSyntax l) {
+            return (int) l.getLiteralToken().getValue();
         }
-        if (node instanceof BinaryExpressionSyntax) {
-            var binaryExpression = (BinaryExpressionSyntax) node;
-            var left = evaluateExpression(binaryExpression.getLeft());
-            var right = evaluateExpression(binaryExpression.getRight());
 
-            SyntaxKind kind = binaryExpression.getOperator().kind();
+        if (node instanceof UnaryExpressionSyntax u) {
+            var operand = evaluateExpression(u.getOperand());
+
+            if (u.getOperator().getKind() == SyntaxKind.ADDITION_TOKEN) {
+                return operand;
+            } else if (u.getOperator().getKind() == SyntaxKind.SUBTRACTION_TOKEN) {
+                return -operand;
+            } else {
+                throw new RuntimeException("Unexpected unary operator " + u.getOperator().getKind());
+            }
+        }
+
+        if (node instanceof BinaryExpressionSyntax be) {
+            var left = evaluateExpression(be.getLeft());
+            var right = evaluateExpression(be.getRight());
+
+            SyntaxKind kind = be.getOperator().getKind();
             if (kind == SyntaxKind.ADDITION_TOKEN)
                 return left + right;
             else if (kind == SyntaxKind.SUBTRACTION_TOKEN)
@@ -35,11 +47,10 @@ public class Evaluator {
                 throw new RuntimeException("Unexpected binary operator " + kind);
 
         }
-        if (node instanceof ParenthesizedExpressionSyntax) {
-            var parenthesizedExpression = (ParenthesizedExpressionSyntax) node;
-            return evaluateExpression(parenthesizedExpression.getExpression());
+        if (node instanceof ParenthesizedExpressionSyntax pe) {
+            return evaluateExpression(pe.getExpression());
         }
 
-        throw new RuntimeException("Unexpected node " + node.kind());
+        throw new RuntimeException("Unexpected node " + node.getKind());
     }
 }

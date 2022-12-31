@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface SyntaxNode {
 
-    SyntaxKind kind();
+    SyntaxKind getKind();
 
     List<SyntaxNode> getChildren();
 }

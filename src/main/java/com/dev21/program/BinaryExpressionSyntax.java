@@ -16,7 +16,7 @@ public class BinaryExpressionSyntax implements ExpressionSyntax {
     }
 
     @Override
-    public SyntaxKind kind() {
+    public SyntaxKind getKind() {
         return SyntaxKind.BINARY_EXPRESSION;
     }
 

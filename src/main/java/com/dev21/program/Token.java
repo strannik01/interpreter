@@ -17,7 +17,7 @@ public class Token implements SyntaxNode {
     }
 
     @Override
-    public SyntaxKind kind() {
+    public SyntaxKind getKind() {
         return kind;
     }
 
